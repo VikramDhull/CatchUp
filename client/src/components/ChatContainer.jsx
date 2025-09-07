@@ -6,6 +6,7 @@ import { ChatContext } from "../../Context/ChatContext";
 import { AuthContext } from "../../Context/AuthContext";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const ChatContainer = () => {
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
@@ -14,6 +15,7 @@ const ChatContainer = () => {
   const [input, setInput] = useState("");
 
   const scrollEnd = useRef();
+  const navigate = useNavigate();
 
   // handle message sending
   const handleSendMessage = async (e) => {
@@ -56,7 +58,7 @@ const ChatContainer = () => {
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
           alt=""
-          className="w-8 rounded-full"
+          className="w-8 rounded-full ml-2"
         />
         <p className="flex-1 text-lg text-white flex items-center gap-2">
           {selectedUser.fullName}
@@ -65,12 +67,17 @@ const ChatContainer = () => {
           )}
         </p>
         <img
+          onClick={() => navigate("/video-call")}
+          src={assets.help_icon}
+          alt=""
+          className="cursor-pointer rounded-full max-w-7 mr-2"
+        />
+        <img
           onClick={() => setSelectedUser(null)}
           src={assets.arrow_icon}
           alt=""
           className="md:hidden max-w-7"
         />
-        <img src={assets.help_icon} alt="" className="max-md:hidden max-w-5" />
       </div>
 
       <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6">

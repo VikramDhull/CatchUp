@@ -6,6 +6,7 @@ import ProfilePage from "./pages/ProfilePage";
 import bgImage from "./assets/bgImage.jpg";
 import { Toaster } from "react-hot-toast";
 import { AuthContext } from "../Context/AuthContext";
+import VideoCallPage from "./pages/VideoCallPage";
 
 const App = () => {
   const { authUser } = useContext(AuthContext);
@@ -32,6 +33,10 @@ const App = () => {
         <Route
           path="/profile"
           element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="video-call"
+          element={authUser ? <VideoCallPage /> : <Navigate to="/login" />}
         />
       </Routes>
     </div>

@@ -18,6 +18,7 @@ export const io = new Server(server, {
 
 // store online users
 export const userSocketMap = {}; // {userId: socketId}
+const videoCallStatusMap = {}; // { userId: 'idle' | 'calling' | 'in-call' }
 
 // socket.io connection handler
 io.on("connection", (socket) => {
@@ -29,9 +30,53 @@ io.on("connection", (socket) => {
   // emit online users to all connected clients
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+  socket.on("offer", ({ from, to, offer }) => {
+    if (
+      videoCallStatusMap[to] === "in-call" ||
+      videoCallStatusMap[to] === "ringing"
+    ) {
+      io.to(userSocketMap[from]).emit("busy", {}); //-------------------->>>>>>>>>>>>>>
+      return;
+    }
+    if (!userSocketMap[to]) {
+      // callee offline
+      io.to(userSocketMap[from]).emit("offline", { to });
+      return;
+    }
+    videoCallStatusMap[from] = "calling";
+    videoCallStatusMap[to] = "ringing";
+    // console.log({ from, to, offer });
+    // console.log(`offer from : ${userSocketMap[from]}`);
+    // console.log(`offer to : ${userSocketMap[to]}`);
+    io.to(userSocketMap[to]).emit("offer", { from, to, offer });
+  });
+
+  socket.on("answer", ({ from, to, answer }) => {
+    videoCallStatusMap[from] = "in-call";
+    videoCallStatusMap[to] = "in-call";
+    // console.log(`answer from : ${userSocketMap[from]}`);
+    // console.log(`answer to : ${userSocketMap[to]}`);
+    io.to(userSocketMap[from]).emit("answer", { from, to, answer });
+  });
+
+  socket.on("endcall", ({ from, to }) => {
+    videoCallStatusMap[from] = "idle";
+    videoCallStatusMap[to] = "idle";
+    // optional: notify both ends
+    io.to(userSocketMap[from]).emit("endcall");
+    io.to(userSocketMap[to]).emit("endcall");
+  });
+
+  socket.on("icecandidate", ({ from, to, candidate }) => {
+    if (userSocketMap[to]) {
+      io.to(userSocketMap[to]).emit("icecandidate", { from, to, candidate });
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("User disconnected", userId);
     delete userSocketMap[userId];
+    videoCallStatusMap[userId] = "idle";
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
